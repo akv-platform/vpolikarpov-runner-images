@@ -117,7 +117,7 @@ variable "vm_size" {
   default = "Standard_D4s_v4"
 }
 
-source "azure-arm" "build_vhd" {
+source "azure-arm" "build_image" {
   location = "${var.location}"
 
   // Auth
@@ -162,7 +162,7 @@ source "azure-arm" "build_vhd" {
 }
 
 build {
-  sources = ["source.azure-arm.build_vhd"]
+  sources = ["source.azure-arm.build_image"]
 
   // Create folder to store temporary data
   provisioner "shell" {

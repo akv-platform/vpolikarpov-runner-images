@@ -143,7 +143,7 @@ variable "vm_size" {
   default = "Standard_D4s_v4"
 }
 
-source "azure-arm" "build_vhd" {
+source "azure-arm" "build_image" {
   allowed_inbound_ip_addresses           = "${var.allowed_inbound_ip_addresses}"
   build_resource_group_name              = "${var.build_resource_group_name}"
   client_id                              = "${var.client_id}"
@@ -176,7 +176,7 @@ source "azure-arm" "build_vhd" {
 }
 
 build {
-  sources = ["source.azure-arm.build_vhd"]
+  sources = ["source.azure-arm.build_image"]
 
   provisioner "shell" {
     execute_command = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
