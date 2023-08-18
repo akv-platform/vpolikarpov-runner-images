@@ -47,11 +47,11 @@ function Get-DestinationBlobUri {
 
 $ErrorActionPreference = "Stop"
 
-# Test if azcopy is installed and PATH set correctly.
-if (!(Get-Command azcopy -ErrorAction SilentlyContinue)) {
-  throw "The azcopy command wasn't found. Please install it and make sure it's available on your PATH (either set globally or in this script)."
+if (-not $env:AZCOPYPATH) {
+  Write-Error "AZCOPYPATH is not set"
+  exit 1
 }
-Write-Host "azcopy found on the PATH."
+Write-Host "azcopy path is set"
 
 # Login to Azure
 az login --service-principal --username $ClientId --password $ClientSecret --tenant $TenantId | Out-Null
@@ -124,7 +124,7 @@ Write-Host "Copying VHD blob from '$($sourceDiskUri.Split('?')[0])' to '$($desti
 $jobLog = New-Object 'System.Collections.Generic.List[PSCustomObject]'
 Write-Host 'Starting azcopy'
 
-azcopy copy $sourceDiskUri $DestinationVHDBlobUri --s2s-preserve-access-tier=false --output-type json | Foreach-Object {
+& $env:AZCOPYPATH copy $sourceDiskUri $DestinationVHDBlobUri --s2s-preserve-access-tier=false --output-type json | Foreach-Object {
   # Parse Json
   $json = ConvertFrom-Json -InputObject $_
   if ($json.MessageContent.StartsWith('{')) {
