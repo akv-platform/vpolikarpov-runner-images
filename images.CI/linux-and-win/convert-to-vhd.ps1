@@ -47,6 +47,7 @@ function Get-DestinationBlobUri {
 
 $ErrorActionPreference = "Stop"
 
+# Check if azcopy is installed
 if (-not $env:AZCOPYPATH) {
   Write-Error "AZCOPYPATH is not set"
   exit 1
@@ -57,19 +58,21 @@ Write-Host "azcopy path is set"
 az login --service-principal --username $ClientId --password $ClientSecret --tenant $TenantId | Out-Null
 
 # Create Compute Image Gallery if it doesn't exist
+Write-Host "Creating Compute Image Gallery '$GalleryName'..."
 $galleryExists = az sig list --resource-group $ResourceGroupName --query "[?name=='$GalleryName']" -o tsv
 if ($null -eq $galleryExists) {
   az sig create --resource-group $ResourceGroupName --gallery-name $GalleryName --location $Location
 }
 
 # Create Image Definition if it doesn't exist
+Write-Host "Creating Image Definition '$ManagedImageName'..."
 $imageDefinitionName = "RunnerImage-$GalleryImageSku"
-if ($ImageName -like "*windows*") {
+if ($ManagedImageName -like "*windows*") {
   $imageOsType = "Windows"
-} elseif ($ImageName -like "*ubuntu*") {
+} elseif ($ManagedImageName -like "*ubuntu*") {
   $imageOsType = "Linux"
 } else {
-  throw "Unknown OS type for image '$ImageName'"
+  throw "Unknown OS type for image '$ManagedImageName'"
 }
 
 $galleryImageExists = az sig image-definition list --resource-group $ResourceGroupName --gallery-name $GalleryName --query "[?name=='$imageDefinitionName']" -o tsv
@@ -86,31 +89,35 @@ if ($null -eq $galleryImageExists) {
 }
 
 # Create Image Version from existing Managed Image
+Write-Host "Creating Image Version '$GalleryImageVersion' from Managed Image '$ManagedImageName'..."
 az sig image-version create `
   --resource-group $ResourceGroupName `
   --gallery-name $GalleryName `
   --gallery-image-definition $imageDefinitionName `
   --gallery-image-version $GalleryImageVersion `
-  --managed-image "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Compute/images/$ImageName" `
+  --managed-image "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Compute/images/$ManagedImageName" `
   --target-regions $Location `
   --replica-count 1 `
   --location $Location
 
 # Create Azure Managed Disk from Shared Image Gallery
+Write-Host "Creating Azure Managed Disk '$ManagedImageName' from Shared Image Gallery..."
 az disk create `
   --resource-group $ResourceGroupName `
-  --name $ImageName `
+  --name $ManagedImageName `
   --location $Location `
   --gallery-image-reference "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Compute/galleries/$GalleryName/images/$imageDefinitionName/versions/$GalleryImageVersion"
 
 # Generate SAS URL for the Managed Disk
+Write-Host "Generating SAS URL for the Managed Disk '$ManagedImageName'..."
 $sourceDiskUri = az disk grant-access `
   --resource-group $ResourceGroupName `
-  --name $ImageName `
+  --name $ManagedImageName `
   --duration-in-seconds 86400 `
   --access-level Read `
   --query [accessSas] -o tsv
 
+Write-Host "Generating SAS URL for the destination storage account '$StorageAccountName'..."
 $destinationVHDBlobUri = Get-DestinationBlobUri `
   -ContainerName "vhds" `
   -SubscriptionId $SubscriptionId `
@@ -167,12 +174,12 @@ Write-Host "Cleaning up..."
 # Revoke SAS URL for the Managed Disk
 az disk revoke-access `
   --resource-group $ResourceGroupName `
-  --name $ImageName
+  --name $ManagedImageName
 
 # Delete Azure Managed Disk from Shared Image Gallery
 az disk delete `
   --resource-group $ResourceGroupName `
-  --name $ImageName `
+  --name $ManagedImageName `
   --yes
 
 # Delete Image Version from Shared Image Gallery
