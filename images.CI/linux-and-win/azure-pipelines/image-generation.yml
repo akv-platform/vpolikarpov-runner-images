@@ -109,7 +109,7 @@ jobs:
                  -ManagedImageName "${{ parameters.image_type }}-$(Build.BuildId)" `
                  -GalleryName "github_imagegeneration_convert_to_vhd" `
                  -GalleryImageSku "${{ parameters.image_type }}" `
-                 -GalleryImageVersion "$(Build.BuildId)" `
+                 -GalleryImageVersion "0.0.$(Build.BuildId)" `
                  -StorageAccountName $(AZURE_STORAGE_ACCOUNT) `
                  -StorageAccountContainerName "images" `
                  -VhdName "${{ parameters.image_type }}-$(Build.BuildId).vhd" `

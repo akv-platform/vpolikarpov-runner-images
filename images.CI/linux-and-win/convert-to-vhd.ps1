@@ -90,7 +90,7 @@ az sig image-version create `
   --resource-group $ResourceGroupName `
   --gallery-name $GalleryName `
   --gallery-image-definition $imageDefinitionName `
-  --gallery-image-version "1.0.0" `
+  --gallery-image-version $GalleryImageVersion `
   --managed-image "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Compute/images/$ImageName" `
   --target-regions $Location `
   --replica-count 1 `
@@ -101,7 +101,7 @@ az disk create `
   --resource-group $ResourceGroupName `
   --name $ImageName `
   --location $Location `
-  --gallery-image-reference "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Compute/galleries/$GalleryName/images/$imageDefinitionName/versions/1.0.0"
+  --gallery-image-reference "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Compute/galleries/$GalleryName/images/$imageDefinitionName/versions/$GalleryImageVersion"
 
 # Generate SAS URL for the Managed Disk
 $sourceDiskUri = az disk grant-access `
