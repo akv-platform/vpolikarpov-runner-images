@@ -91,7 +91,26 @@ jobs:
     env:
       PACKER_LOG: 1
       PACKER_LOG_PATH: "$(Agent.TempDirectory)/packer-log.txt"
-  
+
+  - task: PowerShell@2
+    displayName: 'Convert managed image to VHD'
+    inputs:
+      targetType: filePath
+      filePath: ./images.CI/linux-and-win/convert-to-vhd.ps1
+      arguments: -SubscriptionId $(AZURE_SUBSCRIPTION) `
+                 -Location $(AZURE_LOCATION) `
+                 -ResourceGroupName $(AZURE_RESOURCE_GROUP) `
+                 -ManagedImageName "${{ parameters.image_type }}-$(Build.BuildId)" `
+                 -GalleryName "github_imagegeneration_convert_to_vhd" `
+                 -GalleryImageSku "${{ parameters.image_type }}" `
+                 -GalleryImageVersion "$(Build.BuildId)" `
+                 -StorageAccountName $(AZURE_STORAGE_ACCOUNT) `
+                 -StorageAccountContainerName "images" `
+                 -VhdName "${{ parameters.image_type }}-$(Build.BuildId).vhd" `
+                 -ClientId $(CLIENT_ID) `
+                 -ClientSecret $(CLIENT_SECRET) `
+                 -TenantId $(AZURE_TENANT)
+
   - task: PowerShell@2
     displayName: 'Copy image artifacts to the separate directory'
     inputs:
