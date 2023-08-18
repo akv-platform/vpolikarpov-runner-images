@@ -160,3 +160,30 @@ if ($LASTEXITCODE) {
   #throw "Copy [$env:imageBlobName] failed with error: $errorContent"
   throw "Blob Copy failed with error: $errorContent"
 }
+
+Write-Host "Successfully converted '$ManagedImageName' to '$VhdName' in '$StorageAccountName' storage account."
+Write-Host "Cleaning up..."
+
+# Revoke SAS URL for the Managed Disk
+az disk revoke-access `
+  --resource-group $ResourceGroupName `
+  --name $ImageName
+
+# Delete Azure Managed Disk from Shared Image Gallery
+az disk delete `
+  --resource-group $ResourceGroupName `
+  --name $ImageName `
+  --yes
+
+# Delete Image Version from Shared Image Gallery
+az sig image-version delete `
+  --resource-group $ResourceGroupName `
+  --gallery-name $GalleryName `
+  --gallery-image-definition $imageDefinitionName `
+  --gallery-image-version $GalleryImageVersion `
+  --yes
+
+# Logout from Azure
+az logout
+
+Write-Host "Done."
