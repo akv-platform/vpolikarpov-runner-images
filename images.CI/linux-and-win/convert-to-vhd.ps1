@@ -32,14 +32,18 @@ function Get-DestinationBlobUri {
 
   Write-Host "List the access keys or Kerberos keys for a $StorageAccountName storage account."
   $targetKey = az storage account keys list --resource-group $ResourceGroupName --account-name $StorageAccountName --query "[0].value" -o tsv
-  Test-LastExitCode
+  if ($LastExitCode -ne 0) {
+    throw "Failed to get storage account key for $StorageAccountName"
+  }
   $isHasKey = -not [System.String]::IsNullOrEmpty($targetKey)
   Write-Host "Successfully got Target Key? $isHasKey"
 
   Write-Host "Creating SAS Token for destination storage account $StorageAccountName in subscription $SubscriptionId."
   $expirySasTime = (Get-Date).AddDays(2).ToString("yyyy-MM-dTH:mZ")
   $targetSasToken = az storage account generate-sas --account-key $targetKey --account-name $StorageAccountName --expiry $expirySasTime --services b --resource-types co --permissions rwdlac -o tsv
-  Test-LastExitCode
+  if ($LastExitCode -ne 0) {
+    throw "Failed to generate SAS token for $StorageAccountName"
+  }
 
   $targetBlobUri = 'https://{0}.blob.core.windows.net/{1}/{2}?{3}' -f $StorageAccountName, $ContainerName, $ImageBlobName, $targetSasToken
   return $targetBlobUri
