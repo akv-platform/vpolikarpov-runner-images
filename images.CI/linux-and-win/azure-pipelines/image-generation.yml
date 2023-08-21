@@ -112,7 +112,7 @@ jobs:
                  -GalleryImageVersion "0.0.$(Build.BuildId)" `
                  -StorageAccountName $(AZURE_STORAGE_ACCOUNT) `
                  -StorageAccountContainerName "images" `
-                 -VhdName "${{ parameters.image_type }}-$(Build.BuildId).vhd" `
+                 -VhdName "$(Build.BuildId)-osDisk-${{ parameters.image_type }}.vhd" `
                  -ClientId $(CLIENT_ID) `
                  -ClientSecret $(CLIENT_SECRET) `
                  -TenantId $(AZURE_TENANT)
@@ -176,18 +176,18 @@ jobs:
                         -PrefixToPathTrim "$(TemplateDirectoryPath)" `
                         -PrintTopNLongest 25
 
-  # - ${{ if eq(parameters.create_release, true) }}:
-  #   - task: PowerShell@2
-  #     displayName: 'Create release for VM deployment'
-  #     inputs:
-  #       targetType: filePath
-  #       filePath: ./images.CI/linux-and-win/create-release.ps1
-  #       arguments: -BuildId $(Build.BuildId) `
-  #                         -Organization $(RELEASE_TARGET_ORGANIZATION) `
-  #                         -DefinitionId $(RELEASE_TARGET_DEFINITION_ID) `
-  #                         -Project $(RELEASE_TARGET_PROJECT) `
-  #                         -ImageName ${{ parameters.image_type }} `
-  #                         -AccessToken $(RELEASE_TARGET_TOKEN)
+  - ${{ if eq(parameters.create_release, true) }}:
+    - task: PowerShell@2
+      displayName: 'Create release for VM deployment'
+      inputs:
+        targetType: filePath
+        filePath: ./images.CI/linux-and-win/create-release.ps1
+        arguments: -BuildId $(Build.BuildId) `
+                          -Organization $(RELEASE_TARGET_ORGANIZATION) `
+                          -DefinitionId $(RELEASE_TARGET_DEFINITION_ID) `
+                          -Project $(RELEASE_TARGET_PROJECT) `
+                          -ImageName "${{ parameters.image_type }}-$(Build.BuildId)" `
+                          -AccessToken $(RELEASE_TARGET_TOKEN)
 
   - task: PowerShell@2
     displayName: 'Clean up resources'
@@ -196,7 +196,7 @@ jobs:
       targetType: filePath
       filePath: ./images.CI/linux-and-win/cleanup.ps1
       arguments: -ResourcesNamePrefix $(Build.BuildId) `
-                     -Image ${{ parameters.image_type }} `
+                     -Image "$(Build.BuildId)-osDisk-${{ parameters.image_type }}.vhd" `
                      -StorageAccount $(AZURE_STORAGE_ACCOUNT) `
                      -SubscriptionId $(AZURE_SUBSCRIPTION) `
                      -ClientId $(CLIENT_ID) `

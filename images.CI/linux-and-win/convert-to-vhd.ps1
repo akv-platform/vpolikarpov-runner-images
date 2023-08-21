@@ -123,7 +123,7 @@ $sourceDiskUri = az disk grant-access `
 
 Write-Host "Generating SAS URL for the destination storage account '$StorageAccountName'..."
 $destinationVHDBlobUri = Get-DestinationBlobUri `
-  -ContainerName "vhds" `
+  -ContainerName $StorageAccountContainerName `
   -SubscriptionId $SubscriptionId `
   -ResourceGroupName $ResourceGroupName `
   -StorageAccountName $StorageAccountName `
