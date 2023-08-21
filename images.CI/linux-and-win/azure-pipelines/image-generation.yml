@@ -130,7 +130,7 @@ jobs:
   - task: PowerShell@2
     displayName: 'Remove managed image'
     inputs:
-      targetType: filePath
+      targetType: 'inline'
       script: |
         az login --service-principal `
           --username "$(CLIENT_ID)" `
