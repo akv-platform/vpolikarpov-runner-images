@@ -158,8 +158,8 @@ Write-Host 'Starting azcopy'
 Write-Host 'azcopy finished'
 
 # Check last exit code
-if ($LASTEXITCODE) {
-  Write-Host $LASTEXITCODE
+if ($LastExitCode) {
+  Write-Host $LastExitCode
 
   $failedJob = $jobLog | Where-Object { $_.MessageType -eq 'EndOfJob' -and $_.MessageContent.JobStatus -eq 'Failed' }
 
@@ -178,13 +178,21 @@ Write-Host "Cleaning up..."
 # Revoke SAS URL for the Managed Disk
 az disk revoke-access `
   --resource-group $ResourceGroupName `
-  --name $ManagedImageName
+  --name $ManagedImageName `
+  --only-show-errors
+if ($LastExitCode) {
+  Write-Host "Warning: Failed to revoke access to the Managed Disk '$ManagedImageName'."
+}
 
 # Delete Azure Managed Disk from Shared Image Gallery
 az disk delete `
   --resource-group $ResourceGroupName `
   --name $ManagedImageName `
+  --only-show-errors `
   --yes
+if ($LastExitCode) {
+  Write-Host "Warning: Failed to delete the Managed Disk '$ManagedImageName'."
+}
 
 # Delete Image Version from Shared Image Gallery
 az sig image-version delete `
@@ -192,7 +200,10 @@ az sig image-version delete `
   --gallery-name $GalleryName `
   --gallery-image-definition $imageDefinitionName `
   --gallery-image-version $GalleryImageVersion `
-  --yes
+  --only-show-errors
+if ($LastExitCode) {
+  Write-Host "Warning: Failed to delete the Image Version '$GalleryImageVersion'."
+}
 
 # Logout from Azure
 az logout
