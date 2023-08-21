@@ -5,6 +5,7 @@ param(
     [String] [Parameter (Mandatory=$true)] $Location,
     [String] [Parameter (Mandatory=$true)] $ImageName,
     [String] [Parameter (Mandatory=$true)] $ImageResourceGroupName,
+    [String] [Parameter (Mandatory=$true)] $TempResourceGroupName,
     [String] [Parameter (Mandatory=$true)] $SubscriptionId,
     [String] [Parameter (Mandatory=$true)] $TenantId,
     [String] [Parameter (Mandatory=$false)] $VirtualNetworkName,
@@ -18,8 +19,7 @@ if (-not (Test-Path $TemplatePath))
     exit 1
 }
 
-$Image = [io.path]::GetFileName($TemplatePath).Split(".")[0]
-$TempResourceGroupName = "${ImageName}_${Image}"
+$ImageTemplateName = [io.path]::GetFileName($TemplatePath).Split(".")[0]
 $InstallPassword = [System.GUID]::NewGuid().ToString().ToUpper()
 
 packer validate -syntax-only $TemplatePath
@@ -37,7 +37,7 @@ $SensitiveData = @(
 Write-Host "Show Packer Version"
 packer --version
 
-Write-Host "Build $Image VM"
+Write-Host "Build $ImageTemplateName VM"
 packer build    -var "client_id=$ClientId" `
                 -var "client_secret=$ClientSecret" `
                 -var "install_password=$InstallPassword" `
